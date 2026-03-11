@@ -3,7 +3,7 @@ const admin = require("firebase-admin");
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-const serviceAccount = require("./dailycart-8155a-firebase-adminsdk.json");
+const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -100,6 +100,7 @@ async function findOrCreateProduct(productName) {
 
   }
 }
+
 
 
 
