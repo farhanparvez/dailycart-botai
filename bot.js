@@ -3,7 +3,7 @@ const admin = require("firebase-admin");
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-const serviceAccount = require("./dailycart-8155a-firebase-adminsdk-fbsvc-e6ce46d793.json");
+const serviceAccount = require("./dailycart-8155a-firebase-adminsdk.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -74,5 +74,6 @@ app.get("/update", async (req, res) => {
 app.listen(3000, () => {
   console.log("DailyCart Bot Running");
 });
+
 
 
