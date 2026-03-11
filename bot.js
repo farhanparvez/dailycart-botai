@@ -5,7 +5,7 @@ const cheerio = require("cheerio");
 
 const app = express();
 
-// Firebase Key from Render Environment
+// Firebase key from Render environment
 const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
 
 admin.initializeApp({
@@ -15,38 +15,65 @@ admin.initializeApp({
 const db = admin.firestore();
 
 
-// -------- PRICE FETCH FUNCTION --------
+// ---------- GOOGLE PRICE SCRAPER ----------
 
-async function getPrice(product) {
+async function getGooglePrice(product) {
 
   try {
 
-   const url = `https://www.google.com/search?q=${product}+price+kolkata+market+per+kg`;
-    const { data } = await axios.get(url);
+    const url = `https://www.google.com/search?q=${product}+price+kolkata+market+per+kg`;
+
+    const { data } = await axios.get(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
 
     const $ = cheerio.load(data);
 
-    let priceText = $("span").first().text();
+    let price = null;
 
-    let price = parseInt(priceText.replace(/[^0-9]/g, ""));
+    $("span").each((i, el) => {
 
-    // fallback random price
-    if (!price || price < 5) {
-      price = Math.floor(Math.random() * 80) + 20;
-    }
+      const text = $(el).text();
+      const number = parseInt(text.replace(/[^0-9]/g, ""));
+
+      if (number && number > 5 && number < 500) {
+        price = number;
+        return false;
+      }
+
+    });
 
     return price;
 
   } catch (err) {
 
-    console.log("Price fetch error:", err);
+    console.log("Google scrape error:", err);
     return null;
 
   }
+
 }
 
 
-// -------- UPDATE ALL PRODUCTS --------
+// ---------- PRICE FETCH ----------
+
+async function getPrice(product) {
+
+  const googlePrice = await getGooglePrice(product);
+
+  if (googlePrice) {
+    return googlePrice;
+  }
+
+  // fallback price
+  return Math.floor(Math.random() * 80) + 20;
+
+}
+
+
+// ---------- UPDATE ALL PRODUCTS ----------
 
 async function updatePrices() {
 
@@ -57,20 +84,17 @@ async function updatePrices() {
     for (const doc of snapshot.docs) {
 
       const data = doc.data();
-      const productName = data.name;
+
+      const productName = data.name || doc.id;
 
       const price = await getPrice(productName);
 
-      if (price) {
+      await db.collection("products").doc(doc.id).update({
+        price: price,
+        updatedAt: new Date()
+      });
 
-        await db.collection("products").doc(doc.id).update({
-          price: price,
-          updatedAt: new Date()
-        });
-
-        console.log(productName + " updated:", price);
-
-      }
+      console.log(productName + " updated:", price);
 
     }
 
@@ -85,22 +109,25 @@ async function updatePrices() {
 }
 
 
-// -------- AUTO CREATE PRODUCT --------
+// ---------- AUTO CREATE PRODUCT ----------
 
 async function findOrCreateProduct(productName) {
 
-  const ref = db.collection("products").doc(productName.toLowerCase());
+  const id = productName.toLowerCase();
+
+  const ref = db.collection("products").doc(id);
+
   const doc = await ref.get();
 
   if (!doc.exists) {
 
-    console.log("Product not found. Creating:", productName);
+    console.log("Creating new product:", productName);
 
     const price = await getPrice(productName);
 
     await ref.set({
       name: productName,
-      price: price || 0,
+      price: price,
       createdAt: new Date()
     });
 
@@ -115,14 +142,15 @@ async function findOrCreateProduct(productName) {
 }
 
 
-// -------- API ROUTES --------
+// ---------- ROUTES ----------
 
-// Manual update
+// manual update
 app.get("/update", async (req, res) => {
 
   try {
 
     await updatePrices();
+
     res.send("Prices Updated");
 
   } catch (err) {
@@ -135,7 +163,7 @@ app.get("/update", async (req, res) => {
 });
 
 
-// Product search API
+// product search API
 app.get("/product/:name", async (req, res) => {
 
   try {
@@ -159,17 +187,18 @@ app.get("/product/:name", async (req, res) => {
 });
 
 
-// -------- AUTO UPDATE EVERY 6 HOURS --------
+// ---------- AUTO UPDATE EVERY 6 HOURS ----------
 
 setInterval(() => {
 
   console.log("Running auto price update...");
+
   updatePrices();
 
-}, 6 * 60 * 60 * 1000); // 6 hours
+}, 6 * 60 * 60 * 1000);
 
 
-// -------- START SERVER --------
+// ---------- START SERVER ----------
 
 app.listen(3000, () => {
 
