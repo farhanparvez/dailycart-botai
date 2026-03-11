@@ -75,5 +75,32 @@ app.listen(3000, () => {
   console.log("DailyCart Bot Running");
 });
 
+async function findOrCreateProduct(productName) {
+
+  const ref = db.collection("products").doc(productName.toLowerCase());
+  const doc = await ref.get();
+
+  if (!doc.exists) {
+
+    console.log("Product not found. Creating:", productName);
+
+    const price = await getPrice(productName);
+
+    await ref.set({
+      name: productName,
+      price: price || 0,
+      createdAt: new Date()
+    });
+
+    return price;
+
+  } else {
+
+    return doc.data().price;
+
+  }
+}
+
+
 
 
