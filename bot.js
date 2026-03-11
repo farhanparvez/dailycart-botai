@@ -74,3 +74,4 @@ app.get("/update", async (req, res) => {
 app.listen(3000, () => {
   console.log("DailyCart Bot Running");
 });
+
