@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Firebase key
-const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
+const serviceAccount = require("./dailycart-8155a-148116f7784b.json");
 
 serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
 
@@ -220,6 +220,7 @@ app.listen(PORT, () => {
   console.log(`DailyCart Bot Running on port ${PORT}`);
 
 });
+
 
 
 
