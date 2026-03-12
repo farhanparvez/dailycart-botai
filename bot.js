@@ -6,7 +6,7 @@ const cheerio = require("cheerio");
 const app = express();
 
 // Firebase key from Render environment
-const serviceAccount = require("./dailycart-8155a-firebase-adminsdk-fbsvc-918074d337.json");
+const serviceAccount = require("./dailycart-8155a-148116f7784b.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -205,6 +205,7 @@ app.listen(3000, () => {
   console.log("DailyCart Bot Running");
 
 });
+
 
 
 
