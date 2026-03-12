@@ -151,23 +151,30 @@ async function findOrCreateProduct(productName) {
 // ---------- ROUTES ----------
 
 // manual update
-app.get("/update", async (req, res) => {
+app.get("/product/:name", async (req, res) => {
 
   try {
 
-    await updatePrices();
+    const productName = req.params.name;
 
-    res.send("Prices Updated");
+    const price = await findOrCreateProduct(productName);
+
+    res.json({
+      product: productName,
+      price: price
+    });
 
   } catch (err) {
 
-    console.error(err);
-    res.status(500).send("Update Error");
+    console.error("FULL PRODUCT ERROR:", err);
+
+    res.status(500).json({
+      error: err.message
+    });
 
   }
 
 });
-
 
 // product search API
 app.get("/product/:name", async (req, res) => {
@@ -211,4 +218,5 @@ app.listen(PORT, () => {
   console.log(`DailyCart Bot Running on port ${PORT}`);
 
 });
+
 
