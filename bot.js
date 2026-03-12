@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 3000;
 // Firebase key
 const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
 
+serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+
 // Prevent double initialization
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -218,5 +220,6 @@ app.listen(PORT, () => {
   console.log(`DailyCart Bot Running on port ${PORT}`);
 
 });
+
 
 
