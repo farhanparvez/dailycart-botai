@@ -5,12 +5,18 @@ const cheerio = require("cheerio");
 
 const app = express();
 
-// Firebase key from Render environment
+// Render dynamic port
+const PORT = process.env.PORT || 3000;
+
+// Firebase key
 const serviceAccount = require("./dailycart-8155a-148116f7784b.json");
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+// Prevent double initialization
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+}
 
 const db = admin.firestore();
 
@@ -21,7 +27,7 @@ async function getGooglePrice(product) {
 
   try {
 
-    const url = `https://www.google.com/search?q=${product}+price+kolkata+market+per+kg`;
+    const url = `https://www.google.com/search?q=${encodeURIComponent(product)}+price+kolkata+market+per+kg`;
 
     const { data } = await axios.get(url, {
       headers: {
@@ -49,7 +55,7 @@ async function getGooglePrice(product) {
 
   } catch (err) {
 
-    console.log("Google scrape error:", err);
+    console.log("Google scrape error:", err.message);
     return null;
 
   }
@@ -102,7 +108,7 @@ async function updatePrices() {
 
   } catch (error) {
 
-    console.error("Update error:", error);
+    console.error("Update error:", error.message);
 
   }
 
@@ -113,7 +119,7 @@ async function updatePrices() {
 
 async function findOrCreateProduct(productName) {
 
-  const id = productName.toLowerCase();
+  const id = productName.toLowerCase().trim();
 
   const ref = db.collection("products").doc(id);
 
@@ -179,7 +185,7 @@ app.get("/product/:name", async (req, res) => {
 
   } catch (err) {
 
-    console.error(err);
+    console.error("Product error:", err.message);
     res.status(500).send("Product Error");
 
   }
@@ -200,12 +206,8 @@ setInterval(() => {
 
 // ---------- START SERVER ----------
 
-app.listen(3000, () => {
+app.listen(PORT, () => {
 
-  console.log("DailyCart Bot Running");
+  console.log(`DailyCart Bot Running on port ${PORT}`);
 
 });
-
-
-
-
