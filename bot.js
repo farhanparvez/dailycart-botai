@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Firebase key
-const serviceAccount = require("./dailycart-8155a-148116f7784b.json");
+const serviceAccount = JSON.parse(process.env.FIREBASE_KEY);
 
 // Prevent double initialization
 if (!admin.apps.length) {
@@ -211,3 +211,4 @@ app.listen(PORT, () => {
   console.log(`DailyCart Bot Running on port ${PORT}`);
 
 });
+
